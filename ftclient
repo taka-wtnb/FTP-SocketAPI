@@ -1,0 +1,304 @@
+#!/usr/bin/python3
+
+## Author: Takahiro Watanabe
+## Program name: CS372 Project 2 ftclient
+## Course Name: CS372 Introduction to Computer Networks (Fall 2019)
+## Last Modified: 12/01/19
+## Description: This program runs as a client host of a file transfer application. This one works paired with a server 
+##              host, which is ftserver. ftclient initiates a connection to ftserver to establish the TCP control connection 
+##              and sends a request. Then it accepts the connection from ftserver to open the TCP data connection, 
+##              then receives the proper data/messages from ftserver.
+##              This program is written in Python and implements the socket API and TCP protocol.
+## Source 1: Textbook (Kurose and Ross (2017) Computer Networking: A Top-Down Approach (7th Edition). Pearson, pp166-169)
+## Source 2: My own code written for CS372 (Fall 2019)'s Project 1 assignment
+## Source 3: <Title> How to do a large text file transfer in python?
+##           <Author> freakish
+##           <Date of Retrieval> 11/28/19
+##           <Availability> https://stackoverflow.com/questions/20007319/how-to-do-a-large-text-file-transfer-in-python
+## Source 4: <Title> How do I list all files of a directory?
+##                   (referred to the code snippet in the section "Get a list of files with Python 2 and 3")
+##           <Author> Giovanni G. PY
+##           <Date of Retrieval> 11/28/19
+##           <Availability> https://stackoverflow.com/questions/3207219/how-do-i-list-all-files-of-a-directory
+## Source 5: <Title> Python File Write
+##           <Author> W3Schools.com
+##           <Date of Retrieval> 11/28/19
+##           <Availability> https://www.w3schools.com/python/python_file_write.asp
+
+
+from socket import *
+import sys
+import signal
+import os
+
+
+# Function to validate command-line parameters. If there is an invalid argument, it displays an error message
+# and returns 0. If valid, it returns 1. This function takes no parameter.
+# Pre-conditions: the user provided the un-validated command-line arguments
+# Post-conditions: the command-line arguments are either validated or invalidated
+def valid_param(): 
+    # check usage & args. if the command is '-l', it requires 5 arguments (including the program name itself)
+    if sys.argv[3] == '-l':
+        # if not, displays a correct usage and returns 0
+        if len(sys.argv) != 5:
+            print('USAGE:', sys.argv[0], '<server_host>', '<server_port>', '-l', '<data_port>')
+            print('or')
+            print('USAGE:', sys.argv[0], '<server_host>', '<server_port>', '-g', '<filename>','<data_port>')
+            return 0
+    # if the command is '-g', it requires 6 arguments (including the program name itself)
+    elif sys.argv[3] == '-g':
+        # if not, displays a correct usage and returns 0
+        if len(sys.argv) != 6:
+            print('USAGE:', sys.argv[0], '<server_host>', '<server_port>', '-l', '<data_port>')
+            print('or')
+            print('USAGE:', sys.argv[0], '<server_host>', '<server_port>', '-g', '<filename>','<data_port>')
+            return 0
+    # if the command is neither '-l' nor '-g', the command is invalid. display the correct usage and return 0.
+    else:
+        print('USAGE:', sys.argv[0], '<server_host>', '<server_port>', '-l', '<data_port>')
+        print('or')
+        print('USAGE:', sys.argv[0], '<server_host>', '<server_port>', '-g', '<filename>','<data_port>')
+        return 0   
+    
+    # the server host name must be one of the flip machines. if not, display the correct usage and return 0.     
+    if not((sys.argv[1] == 'flip1') or (sys.argv[1] == 'flip2') or (sys.argv[1] == 'flip3')):
+        print('The server host name must be \'flip1\' or \'flip2\' or \'flip3\'')
+        return 0
+    
+    # the server port number must be in the valid range (0 - 65535). if not, display the correct usage and return 0.
+    if (int(sys.argv[2]) < 0) or (int(sys.argv[2]) > 65535):
+        print("The server port number is out of range. Cannot be used.")
+        return 0
+    # it also cannot use the reserved port number (0 - 1023).
+    elif (0 <= int(sys.argv[2])) and (int(sys.argv[2]) <= 1023):
+        print("The server port number is reserved. Cannot be used.")
+        return 0
+    # it should avoid using 30020 and 30021 too, because they are well-known FTP port number.
+    elif (int(sys.argv[2]) == 30021) or (int(sys.argv[2]) == 30020):
+        print("You must avoid using the port number (well-known FTP port number) for the server port number.")
+        return 0
+    
+    # if the command is '-l', the fifth parameter is the data port number. valid the argument.
+    if sys.argv[3] == '-l':
+        # the data port number must be in the valid range (0 - 65535). if not, display the correct usage and return 0.
+        if (int(sys.argv[4]) < 0) or (int(sys.argv[4]) > 65535):
+            print("The data port number is out of range. Cannot be used.")
+            return 0
+        # it also cannot use the reserved port number (0 - 1023).
+        elif (0 <= int(sys.argv[4])) and (int(sys.argv[4]) <= 1023):
+            print("The port number is reserved. Cannot be used.")
+            return 0
+        # it should avoid using 30020 and 30021 too, because they are well-known FTP port number.
+        elif (int(sys.argv[4]) == 30021) or (int(sys.argv[4]) == 30020):
+            print("You must avoid using the port number (well-known FTP port number) for the data port number.")
+            return 0
+    # if the command is '-g', the sixth parameter is the data port number. valid the argument.
+    elif sys.argv[3] == '-g':
+        # the data port number must be in the valid range (0 - 65535). if not, display the correct usage and return 0.
+        if (int(sys.argv[5]) < 0) or (int(sys.argv[5]) > 65535):
+            print("The data port number is out of range. Cannot be used.")
+            return 0
+        # it also cannot use the reserved port number (0 - 1023).
+        elif (0 <= int(sys.argv[5])) and (int(sys.argv[5]) <= 1023):
+            print("The port number is reserved. Cannot be used.")
+            return 0
+        # it should avoid using 30020 and 30021, because they are well-known FTP port number.
+        elif (int(sys.argv[5]) == 30021) or (int(sys.argv[5]) == 30020):
+            print("You must avoid using the port number (well-known FTP port number) for the data port number.")
+            return 0      
+          
+    # return 1 if no error    
+    return 1
+
+
+# Function to initiate a contact from ftclient to ftserver to open the control connection.
+# This takes no parameters and returns the socket for TCP connection.
+# Pre-conditions: control connection with ftserver is not yet requested
+# Post-conditions: if successful, control connection request with ftserver is submitted
+def initiate_contact():
+    # using the host name specified as the command line argument for the sever
+    serverName = sys.argv[1]   
+    
+    # using the port specified as the command line argument for the sever
+    serverPort = int(sys.argv[2]) 
+  
+    # Set up the socket
+    clientSocket = socket(AF_INET, SOCK_STREAM)     # Create the socket
+    clientSocket.connect((serverName, serverPort))  # Connect socket to address
+    
+    # return the established socket
+    return clientSocket     
+
+
+# Function to send a file request from ftclient to ftserver over control connection.
+# This takes no parameters and returns nothing.
+# Pre-conditions: the command for file request and its arguments are already provided and validated
+# Post-conditions: the command and arguments are sent to ftserver over control connection.
+def make_request():   
+    # if the command is '-l', it sends the command and the data port number 
+    # to ftserver over the control connection.
+    if sys.argv[3] == '-l':
+        paramL = sys.argv[3] + ' ' + sys.argv[4]
+        clientSocket.send(paramL.encode())
+    # if the command is '-g', it sends the command, file name and the data port number 
+    # to ftserver over the control connection.    
+    elif sys.argv[3] == '-g':
+        paramG = sys.argv[3] + ' ' + sys.argv[4] + ' ' + sys.argv[5]
+        clientSocket.send(paramG.encode())    
+
+       
+# Function to start accepting the data connection from ftserver, creating and binding a socket for ftserver. 
+# Then start listening on the specified data port.
+# This function takes no parameter and returns the socket for data connection.
+# Pre-conditions: the socket for data connection is not yet open on the ftclient's side
+# Post-conditions: ftclient's socket for data connection is open and starts listening on the specified port
+def start_up():
+    # using the port specified as the command line argument for the ftclient.
+    # if the command is '-l', the fifth parameter is the data port number. if '-g', it's the sixth one.
+    if sys.argv[3] == '-l':
+        clientPort = int(sys.argv[4])
+    elif sys.argv[3] == '-g':
+        clientPort = int(sys.argv[5])    
+        
+    # open a socket object. 'SOCK_STREAM' specifies we are using TCP protocol.
+    dataSocket = socket(AF_INET, SOCK_STREAM)
+    
+    # binding the host and port. 
+    dataSocket.bind(('', clientPort))
+    
+    # start listening
+    dataSocket.listen(1)
+
+    # also return the socket for data connection
+    return dataSocket
+
+
+# Function to receive the requested file data from ftserver over the data connection and process it.
+# This function takes no parameter and returns nothing.
+# Pre-conditions: the request was successfully sent to ftserver over the control connection 
+# and the data connection is successfully established. 
+# Post-conditions: dependint on the request command, ftserver's content is displayed on screen 
+# or the requested file is saved on ftclient's current default directory (unless the duplicated file)
+def receive_data():
+    # short messages to be sent to ftserver for hand-shaking purpose
+    ackMsg = 'OK'
+    negMsg = 'NO'
+    
+    # handle the case where the request command is '-l'
+    if sys.argv[3] == '-l':
+        print('\nReceiving directory structure from', sys.argv[1] + ':' + sys.argv[4])
+        
+        # first, receive the directory's file count info from ftserver, then send back the acknowledgement
+        countChar = connectionSocket.recv(12).decode()
+        fileCount = int(countChar)
+        connectionSocket.send(ackMsg.encode())
+
+        # second, receive the name of each file (and directory) inside the directory from the ftserver one by one.
+        # then display the name on screen and send back the acknowledgement each by each
+        while (fileCount > 0):
+            fileCount = fileCount - 1
+            fileName = connectionSocket.recv(1024).decode()
+            print(fileName)
+            connectionSocket.send(ackMsg.encode())    
+    # handle the case where the request command is '-g'        
+    elif sys.argv[3] == '-g':
+        # flag for the duplicated file
+        cancelReq = 0
+        
+        # first, receive a transferred file name from ftserver
+        fileName = connectionSocket.recv(1024).decode()
+        
+        # then check if the file is already exits in the ftclient's current default server
+        dirList = os.listdir()
+        for f in dirList:
+            if f == fileName:
+                print('\n' + fileName, 'already exists in your directory. File request cancelled.')
+                # if existing, set the flag to 1 and send back the negative acknowledgement to ftserver
+                cancelReq = 1
+                connectionSocket.send(negMsg.encode())
+                break
+        
+        # if not duplicated, receive the file content and save it in the ftclient's current default directory    
+        if cancelReq == 0:        
+            print('\nReceiving \"' + fileName + '\" from', sys.argv[1] + ':' + sys.argv[5])
+            
+            # send back the positive acknowledgement to ftserver
+            connectionSocket.send(ackMsg.encode())    
+            
+            # next, receive the file's byte count info from ftserver, then send back the acknowledgement
+            byteChar = connectionSocket.recv(100).decode()
+            byteCount = int(byteChar)
+            connectionSocket.send(ackMsg.encode())    
+    
+            # holds the byte count received so far
+            currentCount = 0
+            
+            # create and open the file to save in appending mode
+            textFD = open(fileName, "a")        
+            
+            # receive the file data from ftserver chunk by chunk until all the bytes are received
+            while currentCount < byteCount:
+                fileText = connectionSocket.recv(1023).decode()
+                # error checking for incorrectly sent/received data
+                if not fileText:
+                    print('\nNot enough data!')
+                    break
+                # trim additional data
+                if len(fileText) + currentCount > byteCount:
+                    fileText = fileText[:byteCount - currentCount] 
+                        
+                # write (append) the received data into the created file 
+                textFD.write(fileText)
+                
+                # update the received byte count so far
+                currentCount += len(fileText)
+                # then send back the acknowledgement to ftserver each time receiving the chunk of file data
+                connectionSocket.send(ackMsg.encode())    
+                
+            # once received the entire data, print the complete message
+            print('\nFile transfer complete.')
+            
+            # finally, close the file
+            textFD.close()
+
+
+# Here is the beginning of the main procedure.
+
+# flag to tell if ftserver has the requested file or not. initialize it to 1.
+fileExist = 1
+
+# call a function to validate the command-line parameters.
+# if invalid, display the error message and exits the program.        
+if valid_param() == 0:
+    print('\nEnter the entire command-line correctly again.\n')
+    sys.exit(0)
+
+# call a function to create a socket and connect to ftserver to establish the control connection
+clientSocket = initiate_contact()
+
+# call a function to send the command and its arguments to ftserver over the control connection
+make_request()
+
+# if the command is '-g', receive a message from ftserver to tell if the server has the requested file or not.
+if sys.argv[3] == '-g':
+        message = clientSocket.recv(1024).decode()
+        # if the file is not in ftserver's directory, display the error message and flip the flag.
+        if message == 'FILE NOT FOUND':
+            print('\n' + sys.argv[1] + ':' + sys.argv[2], 'says', message)
+            fileExist = 0
+
+# if the flag is not changed, open the data connection with ftserver
+if fileExist == 1:
+    
+    # call a function to create a socket for the data connection and start to listen on it
+    dataSocket = start_up()
+    
+    # accept and connect with ftserver
+    connectionSocket, addr = dataSocket.accept()
+        
+    # call a function to receive the requested file data from ftserver and process it
+    receive_data()
+
+# close the control connection with ftserver before exiting the program 
+print('\nftclinet now colosed.\n')
+clientSocket.close()
