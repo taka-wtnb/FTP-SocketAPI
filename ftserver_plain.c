@@ -50,7 +50,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include  <signal.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/ioctl.h>
