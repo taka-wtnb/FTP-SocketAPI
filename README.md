@@ -4,4 +4,4 @@ Programming assignment for Oregon State University's CS372 (Intro to Computer Ne
 
 This is the 2-connection client-server network application for a simple file transfer system.
 
-Note: This program was originally made to compile and run on the school's machines/servers.
+Note: This program was originally written to compile and run on the school's machines/servers.
