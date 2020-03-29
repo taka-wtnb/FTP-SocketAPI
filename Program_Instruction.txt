@@ -1,0 +1,188 @@
+** CS372 (Fall 2019) Project 2 - Program_Instruction
+** Name: Taka Watanabe
+
+
+---Please note that I have implemented one extra credit feature in my program. 
+---Please refer to the section below which is marked as *** Here is the extra credit feature description *** for details of what it does and how to use it.
+
+
+1. Instruction to compile and run the program for Project 2
+
+a) There are three source files as below:
+
+   (1) ftserver.c
+   (2) ftclient
+   (3) ftserver_plain.c
+
+(1) is the source file for the ftserver program and this includes the extra credit feature I implemented.
+(2) is the source file for the ftclient program.
+(3) is the back-up source file for the ftserver program. This one doesn't have any extra credit feature, but should meet all the basic requirements for the ftserver program.
+As explained later, please use this source file if the ftserver program with (1) doesn't work and cannot proceed.
+
+b) First, we will start with the ftserver.c file. Place the file in some directory (folder) of your machine.
+
+c) Please also place the text files (such as shortfile.txt and longfile.txt), which you will use for transfer, in the same directory
+where you place the ftserver.c file.
+
+d) Next, if you are using the Unix command line, type "dos2unix ftserver.c" on the command line (make sure you are in the directory where the file is placed), then hit <enter> key.
+(Normally, the program compiles without this step, but we are doing this just in case.)
+
+e) Then, if you are using the Unix command line, type "chmod +x ftserver.c" on the next command line, then hit <enter> key.
+
+f) After that, type "gcc -o ftserver ftserver.c" on the next command line, then hit <enter> key.
+
+g) Now, type "ftserver [portnum]" on the next command line and hit <enter> key.
+(try using the port number between 1024 and 65535, but avoid 30020 and 30021. I recommend using the number between 40000 and 60000.)
+If the port number is an invalid value, it prompts us to enter the valid number.
+
+--If you see the connection error message even after providing a valid port number, 
+--it is likely that the port number is currently used by another user. Try a different port number if that happens.
+
+
+*** Here is the extra credit feature description ***
+
+I have implemented one extra credit feature in my program, which is the username/password access to the server.
+Right after the step g) above (assuming you provide the valid port number), the ftserver program starts 
+and it asks the user to enter the username and password then validates the credential to grant the access to the server.
+
+Here is how it works and how to use it.
+
+(1) It first asks us to enter the username. The valid username is "OSUBeavers" (no quotation marks, it's case-sensitive, and no space).
+
+(2) Next, it prompts us to enter the password. The valid password is "CS372@Fall2019" (again, no quotation marks, it's case-sensitive, and no space).
+
+(3) Then it validates the username/password we entered. If the username/password pair is invalid, it asks us to enter the username and password again.
+
+(4) It repeats this process until we provide the valid username & password pair.
+
+(5) Once we enter the correct username and password, ftserver prints the success message on screen and proceeds with the following steps.
+ 
+(6)A: If we correctly enter the username and password as above, it should always work and the program moves forward.
+But, if you have any difficulty in accessing the server even when you provide the valid username/password pair,
+just terminate the ftserver program by hitting <CTRL+C>, then start over the program using ftserver_plain.c file instead.
+
+(6)B: To start the ftserver program with ftserver_plain.c file, please follow the steps b) - g) above by replacing "ftserver.c" with "ftserver_plain.c".
+(For example, for step f), please type "gcc -o ftserver ftserver_plain.c".)
+
+(6)C: In this case, there is no extra credit feature to be graded and please just grade the plain version program according to the grading rubric.
+The plain version should meet all the basic requirements specified in the project specs.
+
+***** End of the extra credit feature description *****
+
+
+h) ftserver now sets up a socket for the control connection and displays a message to show ftserver is open on [portnum]. 
+We will now move on to compiling ftclient. 
+
+i) Now, move on to the ftclient program. Place the ftclient file in some directory (folder) of your another machine (you could of course use the same machine which you use for the ftserver).
+
+j) Next, if you are using the Unix command line, type "dos2unix ftclient" on the command line (make sure you are in the directory where this file is placed), 
+then hit <enter> key.
+(Normally, the program compiles without this step, but we are doing this just in case.)
+
+k) Then, if you are using the Unix command line, type "chmod +x ftclient" on the next command line, then hit <enter> key.
+
+
+
+
+2-(i). Instruction to request ftserver's directory for project 2
+
+a) Continued from step k) above, stay in the same host and directory where ftclient is located.
+Now, type "ftclient [serverhost] [serverport] -l [dataport]" on the command line and hit <enter> key. 
+([serverhost] is the machine name on which the ftserver is running. 
+[serverport] is the same with the [portnum] we specified in step g) above. 
+Again, if we input an invalid number, it will display an error message and exit.)
+
+b) If the command is not "-l", it displays an error message and we need to enter the entire command-line correctly again.
+
+c) If the [dataport] is an invalid number, it again displays an error message and prompts us to enter the entire command-line.
+(try using the port number between 1024 and 65535, but avoid 30020 and 30021. I recommend using the number between 40000 and 60000.)
+
+d) If the command-line parameters are valid, ftclient starts running and establishes the control connection with ftserver.
+It sends the directory request to ftserver at the same time.
+
+--If you see the connection error message even after providing a valid [dataport] value, 
+--it is likely that the port number is currently used by another user. Try a different port number if that happens.
+
+e) Once ftserver accepts the connection from ftclient to open the control connection, 
+it then establishes the data connection with ftclient to open the data connection.
+
+f) If successful, ftserver sends the directory information to ftclient over the data connection.
+
+g) ftclient displays ftserver's directory on screen when successfully receiving the data.
+
+h) Then, ftserver closes the data connection with ftclient, and ftclient closes the control connection with ftserver then exits.
+
+i) ftserver continues to accept another control connection from other clients.
+ 
+
+
+2-(ii). Instruction to request the file transfer from ftserver to ftclient for project 2
+
+a) Likewise the step a) of 2-(i) above, stay in the same host and directory where ftclient is located.
+Now, type "ftclient [serverhost] [serverport] -g [filename] [dataport]" on the command line and hit <enter> key. 
+([serverhost] is the machine name on which the ftserver is running.
+[serverport] is the same with the [portnum] we specified in step g) in 1. above. 
+Again, if we input an invalid number, it will display an error message and exit.
+
+
+<Note> If you do this process right after the steps in 2-(i) above, please make sure you use a different value for [dataport].
+(even if the data connection is successfully closed, the port number will not be released and available immediately.)
+
+
+b) If the command is not "-g", it displays an error message and we need to enter the entire command-line correctly again.
+
+c) If the [dataport] is an invalid number, it again diplays an error message and prompts us to enter the entire command-line.
+(try using the port number between 1024 and 65535, but avoid 30020 and 30021. I recommend using the number between 40000 and 60000.)
+
+d) If the command-line parameters are valid, ftclient starts running and establishes the control connection with ftserver.
+It sends the file transfer request to ftserver at the same time.
+
+--If you see the connection error message even after providing a valid [dataport] value, 
+--it is likely that the port number is currently used by another user. Try a different port number if that happens.
+
+e) Once ftserver accepts the connection from ftclient to open the control connection, 
+it then validates [filename] in the command-line parameters.
+
+f) If ftserver doesn't have the specific file in its directory, it sends an error message to ftclient over the control connection.
+ftclient receives and displays the error message then closes the control connection and then exits.
+ftserver still continues to accept another control connection from other clients.
+
+g) If ftserver has the specific file in its directory, it then establishes the data connection with ftclient to open the data connection.
+
+h) If successful, ftserver firsts sends the requested file name to ftclient over the data connection.
+
+i) ftclient receives the file name and checks if it already has the same file in its own directory.
+
+j) If ftclient already has the same file, it's a duplicated file. It displays an error message and cancel the data transfer.
+Then, ftserver closes the data connection with ftclient, and ftclient closes the control connection with ftserver then exits.
+ftserver still continues to accept another control connection from other clients.
+
+k) If ftclient doesn't have the requested file in its own directory yet, ftserver further sends the file's byte count 
+and file data to ftclient over the data connection.
+ftclient receives the data and saves the file in its own directory, then displays the completion message.
+Then, ftserver closes the data connection with ftclient, and ftclient closes the control connection with ftserver then exits.
+ftserver still continues to accept another control connection from other clients.
+
+
+
+2-(iii). Note for 2-(i) and 2-(ii) above
+
+When you repeat the steps in 2-(i) and 2-(ii) within short intervals (e.g. a few minutes),
+please make sure you use different values for [dataport] each time.
+(even if the data connection is successfully closed, the port number will not be released and available for a few minutes.)
+
+
+
+
+3. Instruction to terminate ftserver for Project 2
+
+a) In order to terminate the ftserver program, first, make sure it has no control/data connection open with any client 
+(all control/data connections with ftclient must be closed). 
+Control connection will be closed by ftclient and data connection will be closed by ftserver upon completion (either success or failure) 
+of the requested data transaction, as described in 2-(i) and 2-(ii) above.
+ 
+b) Then, hit <CTRL+C>. It successfully terminates and exits the ftserver program.
+
+
+
+--EOF--
