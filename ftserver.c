@@ -1,5 +1,5 @@
 /******************************************************************************************************************************
-** Author: Takahiro Watanabe
+** Author: Taka Watanabe
 ** Program name: CS372 Project 2 ftserver (with extra credit feature)
 ** Course Name: CS372 Introduction to Computer Networks (Fall 2019)
 ** Last Modified: 12/01/19
