@@ -19,7 +19,7 @@ a) There are three source files as below:
 (3) is the back-up source file for the ftserver program. This one doesn't have any extra credit feature, but should meet all the basic requirements for the ftserver program.
 As explained later, please use this source file if the ftserver program with (1) doesn't work and cannot proceed.
 
-b) First, we will start with the ftserver.c file. Place the file in some directory (folder) of your machine.
+b) First, we will start with the ftserver.c file. Place the file in some directory (folder) of your machine (host).
 
 c) Please also place the text files (such as shortfile.txt and longfile.txt), which you will use for transfer, in the same directory
 where you place the ftserver.c file.
@@ -73,7 +73,7 @@ The plain version should meet all the basic requirements specified in the projec
 h) ftserver now sets up a socket for the control connection and displays a message to show ftserver is open on [portnum]. 
 We will now move on to compiling ftclient. 
 
-i) Now, move on to the ftclient program. Place the ftclient file in some directory (folder) of your another machine (you could of course use the same machine which you use for the ftserver).
+i) Now, move on to the ftclient program. Place the ftclient file in some directory (folder) of your another machine (host). You could of course use the same machine/host which you use for the ftserver.
 
 j) Next, if you are using the Unix command line, type "dos2unix ftclient" on the command line (make sure you are in the directory where this file is placed), 
 then hit <enter> key.
